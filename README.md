@@ -1,6 +1,7 @@
 # elastic-gdpr-scanner
 
-Scan Elasticsearch instances to check for GDPR compliance
+Scan Elasticsearch instances to check for GDPR compliance.
+
 **Disclamer: Vincent Maury or Elastic cannot be held responsible for the use of this script! Use it at your own risk**
 
 ## Getting Started
