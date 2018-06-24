@@ -2,7 +2,7 @@
 
 ###########################################################
 # GDPR scanner, by Vincent Maury
-# see 
+# see https://github.com/blookot/elastic-gdpr-scanner
 ###########################################################
 
 import socket
@@ -24,10 +24,10 @@ import ipaddress
 VERBOSE = False
 API_OUTPUT = False
 SCAN_FIRST_INDEX_ONLY = False
-SCAN_FIRST_PORT_ONLY = True
+SCAN_FIRST_PORT_ONLY = False
 INVENTORY_ONLY = False
 NB_THREADS = 5      # nb of targets to scan in parallel
-THREAD_TIMEOUT = 30  # seconds
+THREAD_TIMEOUT = 60  # seconds
 DEFAULT_TARGET = '127.0.0.1'
 DEFAULT_PORT = '9200'
 DEFAULT_LOG_FILE = 'es-gdpr-report.csv'
