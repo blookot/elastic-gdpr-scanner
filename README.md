@@ -30,9 +30,11 @@ The script has several options:
 * `--target TARGET` to enter a specific target (single IP or IP range in CIDR format, eg 10.50.3.0/24). Defaults to localhost.
 * `--port PORT` to specify the port where Elasticsearch is running. Defaults to 9200.
 * `--regex REGEX` to add a specific regular expression to look for in the documents, like your username. Default list of regexes provided in the script.
-* `--no-scan` if you only want to inventory Elasticsearch instances (without running the regex matching).
+* `--nb-threads NB_THREADS` to specify how many hosts you want to scan in parallel. Defaults to 10.
+* `--socket-timeout TIMEOUT` to set the timeout for socket connect (open port testing), in seconds. Set it to 2 on the Internet, 0.5 in local networks. Defaults to 2.
+* `--no-scan` if you only want to inventory Elasticsearch instances (without going into indices and running the regex matching). Defaults to False (do the scan).
 * `--out OUT` to specify the name of the log file to output results. Defaults to `es-gdpr-report.csv`
-* `--verbose` turns on verbose output in console
+* `--verbose` turns on verbose output in console. Defaults to False.
 
 ### Report
 

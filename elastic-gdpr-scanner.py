@@ -26,8 +26,9 @@ API_OUTPUT = False
 SCAN_FIRST_INDEX_ONLY = False
 SCAN_FIRST_PORT_ONLY = False
 INVENTORY_ONLY = False
-NB_THREADS = 5      # nb of targets to scan in parallel
-THREAD_TIMEOUT = 60  # seconds
+THREAD_TIMEOUT = 60                 # timeout per host, in seconds
+DEFAULT_TCP_SOCKET_TIMEOUT = 2              # timeout for port scan, in seconds
+DEFAULT_NB_THREADS = 10             # nb of targets to scan in parallel
 DEFAULT_TARGET = '127.0.0.1'
 DEFAULT_PORT = '9200'
 DEFAULT_LOG_FILE = 'es-gdpr-report.csv'
@@ -109,22 +110,23 @@ def getUrlContent(url):
 def portscan(hostname):
     ip = socket.gethostbyname(hostname)
     for port in PORTS:
+        if VERBOSE:
+            print ("** DEBUG ** Scanning Host: {}, Port {}".format(ip,port))
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            if VERBOSE:
-                print ("** DEBUG ** Scanning Host: {}, Port {}".format(ip,port))
-            con = s.connect((ip,int(port)))
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.settimeout(float(TCP_SOCKET_TIMEOUT))
+            s.connect((ip,int(port)))
+            s.close()
         except socket.gaierror:
             print ('Hostname could not be resolved. Exiting')
             # pass
         except socket.error:
             print ("Host: {}, Port {}: Closed".format(ip,port))
-            # print ("Couldn't connect to server")
             # pass
         else:
             if VERBOSE:
                 print ("Host: {}, Port {}: Open".format(ip,port))
-            # con.close()
             # Try getting ES answer
             esAnswer = getUrlContent("http://"+ip+":"+port)
             if esAnswer != 0:
@@ -197,6 +199,8 @@ parser = argparse.ArgumentParser(description='Scan Elasticsearch clusters to che
 parser.add_argument('--target', action='store', default='', help='IP range (CIDR format, eg 10.50.3.0/24) to scan (default: localhost)')
 parser.add_argument('--port', action='store', default='', help='Port where Elasticsearch is running (default: 9200)')
 parser.add_argument('--regex', action='store', default='', help='Specific regex to look for')
+parser.add_argument('--nb-threads', action='store', default='', dest='nbthreads', help='Number of hosts to scan in parallel (default: 10)')
+parser.add_argument('--socket-timeout', action='store', default='', dest='stimeout', help='Seconds to wait for each host/port scanned. Set it to 2 on the Internet, 0.5 in local networks (default: 2)')
 parser.add_argument('--no-scan', action='store_true', default=False, dest='noscan', help='Inventory only (no regex matching)')
 parser.add_argument('--out', action='store', default='', help='Log file with verbose output (default: es-gdpr-report.csv)')
 parser.add_argument('--verbose', action='store_true', default=False, help='Turn on verbose output in console')
@@ -211,6 +215,14 @@ else:
     PORTS = [DEFAULT_PORT]
 if results.regex != '':
     list.append(REGEXES, results.regex)
+if results.nbthreads != '':
+    NB_THREADS = results.nbthreads
+else:
+    NB_THREADS = DEFAULT_NB_THREADS
+if results.stimeout != '':
+    TCP_SOCKET_TIMEOUT = results.stimeout
+else:
+    TCP_SOCKET_TIMEOUT = DEFAULT_TCP_SOCKET_TIMEOUT
 INVENTORY_ONLY = results.noscan
 if results.out != '':
     LOG_FILE = results.out
