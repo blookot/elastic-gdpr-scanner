@@ -26,7 +26,7 @@ API_OUTPUT = False
 SCAN_FIRST_INDEX_ONLY = False
 SCAN_FIRST_PORT_ONLY = False
 INVENTORY_ONLY = False
-THREAD_TIMEOUT = 60                 # timeout per host, in seconds
+THREAD_TIMEOUT = 240                 # timeout per host, in seconds
 DEFAULT_TCP_SOCKET_TIMEOUT = 2              # timeout for port scan, in seconds
 DEFAULT_NB_THREADS = 10             # nb of targets to scan in parallel
 DEFAULT_TARGET = '127.0.0.1'
@@ -145,25 +145,42 @@ def portscan(hostname):
                         versionNumber = 'null'
                 else:
                     versionNumber = 'null'
-                print ("Found Host: {}, Port {}, Cluster name: {}, Name: {}, Version: {}".format(ip, port, clusterName, name, versionNumber))
-                logFile.write("{},{},{},{},{}\r\n".format(ip,port,clusterName,name,versionNumber))
-                if not INVENTORY_ONLY:
-                    # then explore indices : /_cat/indices?v not working on v0.90 ! going through cluster health
-                    # esIndices = getUrlContent("http://"+ip+":"+port+"/_cat/indices?format=json&pretty&h=index")
-                    esIndices = getUrlContent("http://"+ip+":"+port+"/_cluster/health?level=indices")
-                    if esIndices != 0:
-                        if 'indices' in esIndices:
-                            for index in esIndices['indices']:
+                # then grab stats on node from /_stats/docs,store
+                esAnswer = getUrlContent("http://"+ip+":"+port+'/_stats/docs,store')
+                if esAnswer != 0:
+                    if '_all' in esAnswer:
+                        if 'total' in esAnswer['_all']:
+                            totalDocs = esAnswer['_all']['total']['docs']['count']
+                            totalSize = int(int(esAnswer['_all']['total']['store']['size_in_bytes'])/(1024*1024))
+                        else:
+                            totalDocs = 'null'
+                            totalSize = 'null'
+                    else:
+                        totalDocs = 'null'
+                        totalSize = 'null'
+                    print ("Found Host: {}, Port {}, Cluster name: {}, Name: {}, Version: {}, Total number of docs: {}, Total size (MB): {}".format(ip, port, clusterName, name, versionNumber, totalDocs, totalSize))
+                    logFile.write("{},{},{},{},{},{},{}\r\n".format(ip, port, clusterName, name, versionNumber, totalDocs, totalSize))
+                    if not INVENTORY_ONLY:
+                        # then explore indices
+                        # /_cat/indices introduced in 1.3, not working on v0.90 (thus relying on node stats...)
+                        if 'indices' in esAnswer:
+                            for index, indexDetails in iter(esAnswer['indices'].items()):
                                 if VERBOSE:
                                     print ("** Testing index {}".format(index))
                                 # consider non-internal indices
                                 if index[:1] != '.':
+                                    # grab index stats
+                                    # print (json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
+                                    indexNbDocs = indexDetails['total']['docs']['count']
+                                    indexSize = int(int(indexDetails['total']['store']['size_in_bytes'])/(1024*1024))
                                     # then get first doc : /[index]/_search?size=1
                                     esDocs = getUrlContent("http://"+ip+":"+port+"/"+index+"/_search?size=1")
                                     if esDocs != 0:
                                         # check if at least 1 document
                                         if esDocs['hits']['total'] == 0:
-                                            logFile.write("{},{},{},{},{},{},N/A (no doc)\r\n".format(ip,port,clusterName,name,versionNumber,index))
+                                            if VERBOSE:
+                                                print ("No document found in index "+index)
+                                            logFile.write("{},{},{},{},{},{},{},{},{},{},N/A (no doc)\r\n".format(ip, port, clusterName, name, versionNumber, totalDocs, totalSize, index, indexNbDocs, indexSize))
                                         else:
                                             # get source doc
                                             try:
@@ -180,7 +197,7 @@ def portscan(hostname):
                                                         # display uncompliant indices even if not verbose
                                                         print ("** Host: {}, Port {}, Cluster name: {}, Name: {}, Version: {} - Index {} not compliant! (value '{}' matched regex '{}')".format(ip, port, clusterName, name, versionNumber, index, rgpdCheck['value'], rgpdCheck['regex']))
                                                 # log in file anyway
-                                                logFile.write("{},{},{},{},{},{},{},{},{}\r\n".format(ip,port,clusterName,name,versionNumber,index,not(rgpdCheck['result']),rgpdCheck['value'],rgpdCheck['regex']))
+                                                logFile.write("{},{},{},{},{},{},{},{},{},{},{},{},{}\r\n".format(ip, port, clusterName, name, versionNumber, totalDocs, totalSize, index, indexNbDocs, indexSize, not(rgpdCheck['result']), rgpdCheck['value'], rgpdCheck['regex']))
                                     # scan only first index to go faster
                                     if SCAN_FIRST_INDEX_ONLY:
                                         break
@@ -234,7 +251,10 @@ VERBOSE = results.verbose
 
 # prepare log file
 logFile = open(LOG_FILE,"w")
-logFile.write("Host,Port,Cluster_name,Name,Version,Index,Compliant,Value,Regex\r\n")
+if INVENTORY_ONLY:
+    logFile.write("Host,Port,Cluster_name,Name,Version,Total_nb_docs,Total_size_in_MB\r\n")
+else:
+    logFile.write("Host,Port,Cluster_name,Name,Version,Total_nb_docs,Total_size_in_MB,Index,Index_nb_docs,Index_size_in_MB,Compliant,Value,Regex\r\n")
 
 
 # The threader thread pulls a worker from the queue and processes it
