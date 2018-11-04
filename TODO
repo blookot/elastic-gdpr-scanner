@@ -1,0 +1,18 @@
+TODO
+----
+
+by decreasing priority:
+* handle other services running on 9200 (error handling)
+* fingerprint encrypted ES
+* fingerprint authenticated ES
+* support external RGPD related regex dictionnary
+* add ES output
+
+
+DONE
+----
+
+* explicit requirement of python 3
+* switch to inventory mode by default (gdpr scan to be activated by flag)
+* add support for host input
+* add https support

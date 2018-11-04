@@ -22,17 +22,19 @@ Just clone this repository and run the script.
 
 ```
 git clone https://github.com/blookot/elastic-gdpr-scanner
-python elastic-gdpr-scanner.py
+python elastic-gdpr-scanner.py -h
 ```
 
 The script has several options:
 * `-h` will display help.
-* `--target TARGET` to enter a specific target (single IP or IP range in CIDR format, eg 10.50.3.0/24). Defaults to localhost.
+* `--target TARGET` to enter a specific target (hostname or single IP or IP range in CIDR format, eg 10.50.3.0/24). Defaults to localhost.
 * `--port PORT` to specify the port where Elasticsearch is running. Defaults to 9200.
+* `--user USER` to set a username to use when trying to authenticate to Elasticsearch (default: elastic)')
+* `--password PASSWORD` to set a password to use when trying to authenticate to Elasticsearch (default: changeme)')
 * `--regex REGEX` to add a specific regular expression to look for in the documents, like your username. Default list of regexes provided in the script.
 * `--nb-threads NB_THREADS` to specify how many hosts you want to scan in parallel. Defaults to 10.
 * `--socket-timeout TIMEOUT` to set the timeout for socket connect (open port testing), in seconds. Set it to 2 on the Internet, 0.5 in local networks. Defaults to 2.
-* `--no-scan` if you only want to inventory Elasticsearch instances (without going into indices and running the regex matching). Defaults to False (do the scan).
+* `--run-scan` to run the search for GDPR data (based on regex matching). Defaults to False (only inventory Elasticsearch instances without going into indices and running the regex matching).
 * `--out OUT` to specify the name of the log file to output results. Defaults to `es-gdpr-report.csv`
 * `--verbose` turns on verbose output in console. Defaults to False.
 
