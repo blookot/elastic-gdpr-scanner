@@ -49,7 +49,7 @@ python elastic-gdpr-scanner.py --target myelasticsearchid.europe-west9.gcp.elast
 
 ### Testing with a sample document
 
-If you want a test with a true positive, you can connect an Elasticsearch instance via Kibana dev tools and run:
+If you want a test with a true positive, you can connect to an Elasticsearch instance via Kibana dev tools and run:
 
 ```
 POST test-rgpd/_doc/1
