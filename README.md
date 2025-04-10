@@ -38,6 +38,15 @@ The script has several options:
 * `--out OUT` to specify the name of the log file to output results. Defaults to `es-gdpr-report.csv`
 * `--verbose` turns on verbose output in console. Defaults to False.
 
+Easy run on a local Elasticsearch:
+```
+python elastic-gdpr-scanner.py --password myelasticpassword --run-scan
+```
+Or on an Elastic Cloud instance:
+```
+python elastic-gdpr-scanner.py --target myelasticsearchid.europe-west9.gcp.elastic-cloud.com --port 443 --password myelasticpassword --run-scan
+```
+
 ### Testing with a sample document
 
 If you want a test with a true positive, you can connect an Elasticsearch instance via Kibana dev tools and run:
