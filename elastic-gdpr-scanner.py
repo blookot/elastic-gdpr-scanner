@@ -157,10 +157,10 @@ def portscan(hostname):
                         # /_cat/indices introduced in 1.3, not working on v0.90 (thus relying on node stats...)
                         if 'indices' in esAnswer:
                             for index, indexDetails in iter(esAnswer['indices'].items()):
-                                if VERBOSE:
-                                    print ("** Testing index {}".format(index))
                                 # consider non-internal indices
                                 if index[:1] != '.':
+                                    if VERBOSE:
+                                        print ("** Testing index {}".format(index))
                                     # grab index stats
                                     # print (json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')))
                                     indexNbDocs = indexDetails['total']['docs']['count']
@@ -227,7 +227,7 @@ def runRequest(proto,host,port,query,auth):
     res = { 'code': HTTP_ERROR, 'encrypted': True, 'authenticated': True, 'content': ''}
     res['encrypted'] = (proto == 'https')
     res['authenticated'] = auth
-    url = proto + '://' + host + ':' + port + query
+    url = proto + '://' + host + ':' + port + '/' + query
     if VERBOSE:
         print ("Calling query {}".format(url))
     if auth:
