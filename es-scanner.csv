@@ -1,2 +1,0 @@
-Host,Port,Encrypted,Authenticated,Cluster_name,Name,Version,Total_nb_docs,Total_size_in_MB
-127.0.0.1,9200,False,True,docker-cluster,0f4ed5204636,8.17.3,7,0
