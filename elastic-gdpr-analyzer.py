@@ -236,11 +236,13 @@ else:
     TARGETS_FILE = DEFAULT_TARGETS_FILE
 if results.regex != '':
     regexes = {
+        "regexes": [{
             "desc": "Custom regex (user input)",
             "family": "Custom",
             "executed": True,
             "regex": results.regex
-        }
+        }]
+    }
 if results.nbt != '':
     NB_THREADS = results.nbt
 else:
