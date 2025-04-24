@@ -31,7 +31,6 @@ import ipaddress
 # variables and inputs
 VERBOSE = False
 SCAN_FIRST_INDEX_ONLY = False
-SCAN_FIRST_PORT_ONLY = False
 THREAD_TIMEOUT = 240                 # timeout per host, in seconds
 DEFAULT_TCP_SOCKET_TIMEOUT = 2              # timeout for port scan, in seconds
 DEFAULT_NB_THREADS = 10             # nb of targets to scan in parallel
@@ -134,12 +133,11 @@ def rgpdScan(target):
                                 rgpdCheck = regex_checker(source)
                                 if VERBOSE:
                                     print ('** Testing index {}, result: {}'.format(index, rgpdCheck['result']))
-                                else:
-                                    if rgpdCheck['result']:
+                                if rgpdCheck['result']:
+                                    for m in rgpdCheck['matches']:
                                         # display uncompliant indices even if not verbose
-                                        print ("** Host: {}, Port: {}, Cluster name: {}, Name: {}, Version: {} - Index {} not compliant! (value '{}' matched regex '{}')".format(ip, port, clusterName, name, versionNumber, index, rgpdCheck['value'], rgpdCheck['regex']))
-                                # log in file anyway
-                                logFile.write("{},{},{},{},{},{},{},{},{},{},{}\r\n".format(ip, port, clusterName, name, versionNumber, index, indexNbDocs, indexSize, not(rgpdCheck['result']), rgpdCheck['value'], rgpdCheck['regex']))
+                                        print ("** Host: {}, Port: {}, Cluster name: {}, Name: {}, Version: {} - Index {} not compliant! (value '{}' matched regex '{}')".format(ip, port, clusterName, name, versionNumber, index, m['value'], m['regex']))
+                                        logFile.write("{},{},{},{},{},{},{},{},{},{}\r\n".format(ip, port, clusterName, name, versionNumber, index, indexNbDocs, indexSize, m['value'], m['regex']))
                     # scan only first index to go faster
                     if SCAN_FIRST_INDEX_ONLY:
                         break
@@ -151,18 +149,20 @@ def rgpdScan(target):
 # regex checker func (outputs true when regex match, ie outputs true when *not* compliant)
 def regex_checker(jsonDoc):
     # print ('Testing: '+json.dumps(jsonDoc))
+    output = {"result":False, "matches": []}
     for key, value in iter(jsonDoc.items()):
         if isinstance(value, str):
             for r in regexes['regexes']:
                 if r['executed']:
-                    check = bool(re.search(r['regex'], value))
                     if VERBOSE:
                         print ('\tCheck '+value+' against regex \''+r['regex']+'\': '+str(check))
+                    check = bool(re.search(r['regex'], value))
                     if check:
-                        return {"result":True, "value":value, "regex":r['regex']}
+                        output['result'] = True
+                        output['matches'].append({"value":value, "regex":r['regex']})
         elif isinstance(value,dict):
-            return regex_checker(value)
-    return {"result":False, "value":"", "regex":""}
+            output['matches'].append(regex_checker(value)['matches'])
+    return output
 
 
 
@@ -271,7 +271,7 @@ except FileNotFoundError:
 # prepare log file
 logFile = open(LOG_FILE,"w")
 # write header
-logFile.write("Host,Port,Cluster_name,Name,Version,Index,Index_nb_docs,Index_size_in_MB,Compliant,Value,Regex\r\n")
+logFile.write("Host,Port,Cluster_name,Name,Version,Index,Index_nb_docs,Index_size_in_MB,Value,Regex\r\n")
 
 
 # The threader thread pulls a worker from the queue and processes it
