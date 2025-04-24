@@ -32,12 +32,14 @@ import ipaddress
 VERBOSE = False
 SCAN_FIRST_INDEX_ONLY = False
 THREAD_TIMEOUT = 240                 # timeout per host, in seconds
-DEFAULT_TCP_SOCKET_TIMEOUT = 2              # timeout for port scan, in seconds
-DEFAULT_NB_THREADS = 10             # nb of targets to scan in parallel
-DEFAULT_UA = 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17'
+TCP_SOCKET_TIMEOUT = 2              # timeout for port scan, in seconds
+NB_THREADS = 10             # nb of targets to scan in parallel
+UA = 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17'       # user agent used to call elasticsearch
 REGEXES_FILE = 'regexes.json'
-DEFAULT_TARGETS_FILE = 'targets.json'
-DEFAULT_LOG_FILE = 'es-gdpr-report.csv'
+TARGETS_FILE = 'targets.json'
+LOG_FILE = 'es-gdpr-report.csv'
+LOG_FILE_FORMAT = 'csv'
+LOG_JSON = {"issues": []}
 HTTP_OK = 0
 HTTP_ERROR = -1
 HTTP_UNAUTHORIZED = -2
@@ -137,7 +139,21 @@ def rgpdScan(target):
                                     for m in rgpdCheck['matches']:
                                         # display uncompliant indices even if not verbose
                                         print ("** Host: {}, Port: {}, Cluster name: {}, Name: {}, Version: {} - Index {} not compliant! (value '{}' matched regex '{}')".format(ip, port, clusterName, name, versionNumber, index, m['value'], m['regex']))
-                                        logFile.write("{},{},{},{},{},{},{},{},{},{}\r\n".format(ip, port, clusterName, name, versionNumber, index, indexNbDocs, indexSize, m['value'], m['regex']))
+                                        if LOG_FILE_FORMAT == 'csv':
+                                            logFile.write("{},{},{},{},{},{},{},{},{},{}\r\n".format(ip, port, clusterName, name, versionNumber, index, indexNbDocs, indexSize, m['value'], m['regex']))
+                                        else:
+                                            LOG_JSON['issues'].append({
+                                                    "ip": ip,
+                                                    "port": port,
+                                                    "clusterName": clusterName,
+                                                    "name": name,
+                                                    "versionNumber": versionNumber,
+                                                    "index": index,
+                                                    "indexNbDocs": indexNbDocs,
+                                                    "indexSize": indexSize,
+                                                    "fieldValue": m['value'],
+                                                    "regex": m['regex']
+                                                })
                     # scan only first index to go faster
                     if SCAN_FIRST_INDEX_ONLY:
                         break
@@ -180,7 +196,7 @@ def runRequest(proto,host,port,user,pwd,query):
     install_opener(opener)
     # add headers
     headers = {}
-    headers['User-Agent'] = DEFAULT_UA
+    headers['User-Agent'] = UA
     try:
         # run request
         req = Request(url,headers=headers)
@@ -225,15 +241,13 @@ def runRequest(proto,host,port,user,pwd,query):
 parser = argparse.ArgumentParser(description='Scan Elasticsearch clusters to check for GDPR compliance.')
 parser.add_argument('-t', action='store', default='', dest='targets', help='Target file (sample target file: targets-example.json) to read targets from (default: targets.json)')
 parser.add_argument('-r', action='store', default='', dest='regex', help='Specific regex to look for (if set, cancels running all regexes from regexes.json file)')
+parser.add_argument('-o', action='store', default='', dest='output', help='Name of the file to output results. csv or json supported (default: es-gdpr-report.csv)')
 parser.add_argument('--nb-threads', action='store', default='', dest='nbt', help='Number of hosts to scan in parallel (default: 10)')
 parser.add_argument('--socket-timeout', action='store', default='', dest='to', help='Seconds to wait for each host/port scanned. Set it to 2 on the Internet, 0.5 in local networks (default: 2)')
-parser.add_argument('--log-file', action='store', default='', dest='log', help='Log file with verbose output (default: es-gdpr-report.csv)')
 parser.add_argument('--verbose', action='store_true', default=False, help='Turn on verbose output in console')
 results = parser.parse_args()
 if results.targets != '':
     TARGETS_FILE = results.targets
-else:
-    TARGETS_FILE = DEFAULT_TARGETS_FILE
 if results.regex != '':
     regexes = {
         "regexes": [{
@@ -243,18 +257,14 @@ if results.regex != '':
             "regex": results.regex
         }]
     }
+if results.output != '':
+    LOG_FILE = results.output
+    if LOG_FILE[-4:] == 'json':
+        LOG_FILE_FORMAT = 'json'
 if results.nbt != '':
     NB_THREADS = results.nbt
-else:
-    NB_THREADS = DEFAULT_NB_THREADS
 if results.to != '':
     TCP_SOCKET_TIMEOUT = results.to
-else:
-    TCP_SOCKET_TIMEOUT = DEFAULT_TCP_SOCKET_TIMEOUT
-if results.log != '':
-    LOG_FILE = results.log
-else:
-    LOG_FILE = DEFAULT_LOG_FILE
 VERBOSE = results.verbose
 
 
@@ -270,8 +280,9 @@ except FileNotFoundError:
 
 # prepare log file
 logFile = open(LOG_FILE,"w")
-# write header
-logFile.write("Host,Port,Cluster_name,Name,Version,Index,Index_nb_docs,Index_size_in_MB,Value,Regex\r\n")
+if LOG_FILE_FORMAT == 'csv':
+    # write header
+    logFile.write("Host,Port,Cluster_name,Name,Version,Index,Index_nb_docs,Index_size_in_MB,Value,Regex\r\n")
 
 
 # The threader thread pulls a worker from the queue and processes it
@@ -308,6 +319,10 @@ q.join()
 
 
 # write result in output file
+if LOG_FILE_FORMAT == 'json':
+    logFile.write(json.dumps(LOG_JSON, sort_keys=True, indent=4, separators=(',', ': ')))
+
+# close & end
 logFile.close()
 print('')
 print("Scan complete in {} seconds!".format(int(time.time() - start_time)))

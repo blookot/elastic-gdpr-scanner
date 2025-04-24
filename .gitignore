@@ -3,3 +3,4 @@ TODO
 test.py
 targets.json
 *.csv
+out.*

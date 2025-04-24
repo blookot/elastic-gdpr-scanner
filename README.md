@@ -113,20 +113,20 @@ python elastic-gdpr-analyzer.py -h
 
 The script has several options:
 * `-h` will display help.
-* `-t TARGET_FILE` to specify the json target file to use. Defaults to `targets.json`. See the `targets_example.json` file for examples.
+* `-t TARGET_FILE` to specify the json file to read cluster hosts from. Defaults to `targets.json`. See the `targets_example.json` file as example.
 * `-r REGEX` to enter a specific regex to look for (if set, cancels running all regexes from regexes.json file).
+* `-o REPORT_FILE` to specify the name of the file to output results. csv or json supported. Defaults to `es-gdpr-report.csv`.
 * `--nb-threads NB_THREADS` to specify how many hosts you want to scan in parallel. Defaults to `10`.
 * `--socket-timeout TIMEOUT` to set the timeout for socket connect (open port testing), in seconds. Set it to 2 on the Internet, 0.5 in local networks. Defaults to `2`.
-* `--log-file FILE` to specify the name of the log file to output results. Defaults to `es-gdpr-report.csv`
 * `--verbose` turns on verbose output in console. Defaults to `False`.
 
 Easy run on a local Elasticsearch:
 ```
-python elastic-gdpr-analyzer.py -r 'Vincent Maury'
+python elastic-gdpr-analyzer.py -r '[vV]incent.[mM]aury'
 ```
 Or on an Elastic Cloud instance:
 ```
-python elastic-gdpr-analyzer.py -t mytargets.json -r 'Vincent Maury'
+python elastic-gdpr-analyzer.py -t mytargets.json -r '[vV]incent.[mM]aury' -o gdpr-report.json
 ```
 
 ### Testing with a sample document
