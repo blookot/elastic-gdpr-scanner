@@ -1,6 +1,8 @@
 TODO
+.venv
 .DS_Store
 test.py
 targets.json
 *.csv
 out.*
+ner-test.py
