@@ -9,9 +9,8 @@ The Elastic GDPR Scanner consists of 2 tools:
 
 **Disclamer: Vincent Maury or Elastic cannot be held responsible for the use of this script! Use it at your own risk!!**
 
-- - - -
 
-## Getting Started
+## 0. Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine.
 
@@ -28,9 +27,8 @@ Just clone this repository:
 git clone https://github.com/blookot/elastic-gdpr-scanner
 ```
 
-- - - -
 
-## Scanning for Elasticsearch instances
+## 1. Scanning for Elasticsearch instances
 
 
 ### Running the script
@@ -102,9 +100,8 @@ awk '
 
 Finally, pass these targets & ports to the Elastic port scanner :-)
 
-- - - -
 
-## Running the GDPR analyzer
+## 2. Running the GDPR analyzer
 
 Analyzing for GDPR compliance requires to look inside Elasticsearch documents for the presence of PII.
 
