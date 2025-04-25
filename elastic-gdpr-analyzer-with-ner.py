@@ -326,7 +326,10 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 model = AutoModelForCausalLM.from_pretrained("betterdataai/PII_DETECTION_MODEL").to(device)
 tokenizer = AutoTokenizer.from_pretrained("betterdataai/PII_DETECTION_MODEL")
 # Select detection classes to be used
-classes_list = ['<pin>','<api_key>','<bank_routing_number>','<bban>','<company>','<credit_card_number>','<credit_card_security_code>','<customer_id>','<date>','<date_of_birth>','<date_time>','<driver_license_number>','<email>','<employee_id>','<first_name>','<iban>','<ipv4>','<ipv6>','<last_name>','<local_latlng>','<name>','<passport_number>','<password>','<phone_number>','<social_security_number>','<street_address>','<swift_bic_code>','<time>','<user_name>']
+# full list of all classes :
+# classes_list = ['<pin>','<api_key>','<bank_routing_number>','<bban>','<company>','<credit_card_number>','<credit_card_security_code>','<customer_id>','<date>','<date_of_birth>','<date_time>','<driver_license_number>','<email>','<employee_id>','<first_name>','<iban>','<ipv4>','<ipv6>','<last_name>','<local_latlng>','<name>','<passport_number>','<password>','<phone_number>','<social_security_number>','<street_address>','<swift_bic_code>','<time>','<user_name>']
+# sub list :
+classes_list = ['<bank_routing_number>','<bban>','<company>','<credit_card_number>','<credit_card_security_code>','<driver_license_number>','<email>','<first_name>','<iban>','<ipv4>','<ipv6>','<last_name>','<local_latlng>','<name>','<passport_number>','<phone_number>','<social_security_number>','<street_address>','<swift_bic_code>','<user_name>']
 # NER prompt
 prompt = """You are an AI assistant who is responisble for identifying Personal Identifiable information (PII). You will be given a passage of text and you have to \
 identify the PII data present in the passage. You should only identify the data based on the classes provided and not make up any class on your own.
