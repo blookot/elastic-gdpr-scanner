@@ -83,13 +83,13 @@ signal.signal(signal.SIGINT, signal_handler)
 # main scanning function
 def rgpdScan(target):
     proto = target['proto']
-    ip = target['host']
+    host = target['host']
     port = target['port']
     user = target['user']
     pwd = target['pwd']
     if VERBOSE:
-        print ("** DEBUG ** Scanning Host: {}, Port {}".format(ip,port))
-    res = runRequest(proto,ip,port,user,pwd,'')
+        print ("** DEBUG ** Scanning Host: {}, Port {}".format(host,port))
+    res = runRequest(proto,host,port,user,pwd,'')
     if res['code'] != HTTP_OK:
         print("Couldn't query index list!")
     else:
@@ -107,7 +107,7 @@ def rgpdScan(target):
                 versionNumber = esAnswer['version']['number']
 
         # then explore indices
-        res = runRequest(proto,ip,port,user,pwd,'_stats/docs,store')
+        res = runRequest(proto,host,port,user,pwd,'_stats/docs,store')
         esAnswer = res['content']
         # /_cat/indices introduced in 1.3, not working on v0.90 (thus relying on node stats...)
         if 'indices' in esAnswer:
@@ -123,14 +123,14 @@ def rgpdScan(target):
                         indexNbDocs = indexDetails['total']['docs']['count']
                         indexSize = int(int(indexDetails['total']['store']['size_in_bytes'])/(1024*1024))
                         # then get the N docs : /[index]/_search?size=N
-                        res = runRequest(proto,ip,port,user,pwd,index+"/_search?size=" + str(NB_DOCS))
+                        res = runRequest(proto,host,port,user,pwd,index+"/_search?size=" + str(NB_DOCS))
                         if res['code'] == HTTP_OK:
                             esDocs = res['content']
                             # check if at least 1 document
                             if esDocs['hits']['total'] == 0:
                                 if VERBOSE:
                                     print ("No document found in index "+index)
-                                # logFile.write("{},{},{},{},{},{},{},{},N/A (no doc)\r\n".format(ip, port, clusterName, name, versionNumber, index, indexNbDocs, indexSize))
+                                # logFile.write("{},{},{},{},{},{},{},{},N/A (no doc)\r\n".format(host, port, clusterName, name, versionNumber, index, indexNbDocs, indexSize))
                             else:
                                 # iterate on docs
                                 for doc in esDocs['hits']['hits']:
@@ -146,12 +146,12 @@ def rgpdScan(target):
                                         if rgpdCheck['result']:
                                             for m in rgpdCheck['matches']:
                                                 # display uncompliant indices even if not verbose
-                                                print ("** Host: {}, Port: {}, Cluster name: {}, Name: {}, Version: {} - Index {} not compliant! (value '{}' matched regex '{}')".format(ip, port, clusterName, name, versionNumber, index, m['value'], m['regex']))
+                                                print ("** Host: {}, Port: {}, Cluster name: {}, Name: {}, Version: {} - Index {} not compliant! (value '{}' matched regex '{}')".format(host, port, clusterName, name, versionNumber, index, m['value'], m['regex']))
                                                 if LOG_FILE_FORMAT == 'csv':
-                                                    logFile.write("{},{},{},{},{},{},{},{},\"{}\",{}\r\n".format(ip, port, clusterName, name, versionNumber, index, indexNbDocs, indexSize, m['value'], m['regex']))
+                                                    logFile.write("{},{},{},{},{},{},{},{},\"{}\",{}\r\n".format(host, port, clusterName, name, versionNumber, index, indexNbDocs, indexSize, m['value'], m['regex']))
                                                 else:
                                                     LOG_JSON['issues'].append({
-                                                            "ip": ip,
+                                                            "host": host,
                                                             "port": port,
                                                             "clusterName": clusterName,
                                                             "name": name,
@@ -169,12 +169,12 @@ def rgpdScan(target):
                                             if nerCheck['result']:
                                                 for m in nerCheck['matches']:
                                                     # display uncompliant indices even if not verbose
-                                                    print ("** Host: {}, Port: {}, Cluster name: {}, Name: {}, Version: {} - Index {} not compliant! (value '{}' matched NER class '{}')".format(ip, port, clusterName, name, versionNumber, index, m['value'].strip("[]").replace("'", ""), m['class']))
+                                                    print ("** Host: {}, Port: {}, Cluster name: {}, Name: {}, Version: {} - Index {} not compliant! (value '{}' matched NER class '{}')".format(host, port, clusterName, name, versionNumber, index, m['value'].strip("[]").replace("'", ""), m['class']))
                                                     if LOG_FILE_FORMAT == 'csv':
-                                                        logFile.write("{},{},{},{},{},{},{},{},\"{}\",{}\r\n".format(ip, port, clusterName, name, versionNumber, index, indexNbDocs, indexSize, m['value'].strip("[]").replace("'",""), m['class']))
+                                                        logFile.write("{},{},{},{},{},{},{},{},\"{}\",{}\r\n".format(host, port, clusterName, name, versionNumber, index, indexNbDocs, indexSize, m['value'].strip("[]").replace("'",""), m['class']))
                                                     else:
                                                         LOG_JSON['issues'].append({
-                                                                "ip": ip,
+                                                                "host": host,
                                                                 "port": port,
                                                                 "clusterName": clusterName,
                                                                 "name": name,

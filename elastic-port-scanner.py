@@ -15,6 +15,7 @@ if sys.version_info < MIN_PYTHON:
 
 import socket
 import sys
+import re
 import threading
 from queue import Queue
 import signal
@@ -70,7 +71,13 @@ signal.signal(signal.SIGINT, signal_handler)
 
 # main scanning function
 def portscan(hostname):
-    ip = socket.gethostbyname(hostname)
+    # hostname is IP?
+    check = bool(re.search('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', hostname))
+    if check:
+        ip = ip
+    else:
+        # get IP from hostname
+        ip = socket.gethostbyname(hostname)
     for port in ports:
         if VERBOSE:
             print ("** DEBUG ** Scanning Host: {}, Port {}".format(ip,port))
@@ -132,18 +139,19 @@ def portscan(hostname):
                     else:
                         totalDocs = 'null'
                         totalSize = 'null'
-                    print ("==> Found Host: {}, Port: {}, Encrypted: {}, Authenticated: {}, Cluster name: {}, Name: {}, Version: {}, Total number of docs: {}, Total size (MB): {}".format(ip, port, encr, auth, clusterName, name, versionNumber, totalDocs, totalSize))
+                    print ("==> Found Host: {}, Port: {}, Encrypted: {}, Authenticated: {}, Cluster name: {}, Name: {}, Version: {}, Total number of docs: {}, Total size (MB): {}".format(hostname, port, encr, auth, clusterName, name, versionNumber, totalDocs, totalSize))
                     outputTargets['targets'].append({
                             "proto": proto,
-                            "host": ip,
+                            "host": hostname,
+                            "ip": ip,
                             "port": port,
                             "user": user,
                             "pwd": pwd
                         })
                     logFile.write("{},{},{},{},{},{},{},{},{}\r\n".format(ip, port, encr, auth, clusterName, name, versionNumber, totalDocs, totalSize))
             else:
-                print ("==> Found Host: {}, Port {}, Encrypted: {}, Authenticated: {}".format(ip, port, encr, auth))
-                logFile.write("{},{},{},{}\r\n".format(ip, port, encr, auth))
+                print ("==> Found Host: {}, Port {}, Encrypted: {}, Authenticated: {}".format(hostname, port, encr, auth))
+                logFile.write("{},{},{},{}\r\n".format(hostname, port, encr, auth))
 
 
 
@@ -300,9 +308,9 @@ q.join()
 if VERBOSE:
     print("Finishing execution. Outputting targets to file...")
     print(outputTargets)
-targetsFile = open(OUTPUT_FILE,"w")
+targetsFile = open(OUTPUT_FILE,'w', encoding='utf-8')
 # simpler header when inventory only
-targetsFile.write(json.dumps(outputTargets, sort_keys=True, indent=4, separators=(',', ': ')))
+json.dump(outputTargets, targetsFile, sort_keys=True, indent=4, separators=(',', ': '), ensure_ascii=False)
 
 
 # close files and leave
