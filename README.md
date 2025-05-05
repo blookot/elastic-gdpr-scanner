@@ -164,7 +164,7 @@ POST test-rgpd/_doc/1
 {
   "id": "abcd",
   "postDate": "2025-03-15T13:12:00",
-  "message": "Message lambda contenant par exemple mon nom Vincent Maury et celui de Stéphane de Monaco qui ne devraient pas être là.",
+  "message": "Message lambda contenant par exemple mon nom Vincent Maury et celui de Stéphanie de Monaco qui ne devraient pas être là.",
   "email": "Mon email est vincent.maury@elastic.co (pro).",
   "phone": "J'ai un faux numéro de téléphone : (+33)674642014 et j'espère qu'il n'est pas utilisé...",
   "addr": "Une adresse pro au 128, rue du Faubourg Saint-Honoré, 75008 Paris.",
