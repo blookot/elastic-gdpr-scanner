@@ -107,37 +107,10 @@ Analyzing for GDPR compliance requires to look inside Elasticsearch documents fo
 
 The simple (and fast) approach is to extract N documents from an Elasticsearch index and search inside them using regexes.
 
-Optionally, [NER](https://en.wikipedia.org/wiki/Named-entity_recognition) (Named-entity recognition) may be used to leverage the power of AI to infer the presence of classes of PII. To do so, we use a trained model from HuggingFace ([ref](https://huggingface.co/betterdataai/PII_DETECTION_MODEL)) that covers 29 classes across 7 languages (English , Spanish, Swedish, German, Italian, Dutch, French)!
+[NER](https://en.wikipedia.org/wiki/Named-entity_recognition) (Named-entity recognition) can also be used to leverage the power of AI to infer the presence of classes of PII. To do so, we use a trained model from HuggingFace ([ref](https://huggingface.co/betterdataai/PII_DETECTION_MODEL)) that covers 29 classes across 7 languages (English , Spanish, Swedish, German, Italian, Dutch, French)!
 
 
-### Running the script without NER
-
-Just run it:
-```bash
-python elastic-gdpr-analyzer.py -h
-```
-
-The script has several options:
-* `-h` will display help.
-* `-t TARGET_FILE` to specify the json file to read cluster hosts from. Defaults to `targets.json`. See the `targets_example.json` file as example.
-* `-r REGEX` to enter a specific regex to look for (if set, cancels running all regexes from regexes.json file).
-* `-n NB_DOCS` to set the number of documents (up to 10000) to get from each Elasticsearch index. Defaults to `1`.
-* `-o REPORT_FILE` to specify the name of the file to output results. csv or json supported. Defaults to `es-gdpr-report.csv`.
-* `--nb-threads NB_THREADS` to specify how many hosts you want to scan in parallel. Defaults to `10`.
-* `--socket-timeout TIMEOUT` to set the timeout for socket connect (open port testing), in seconds. Set it to 2 on the Internet, 0.5 in local networks. Defaults to `2`.
-* `--verbose` turns on verbose output in console. Defaults to `False`.
-
-Easy run on 100 documents:
-```bash
-python elastic-gdpr-analyzer.py -n 100
-```
-Or on a custom list of targets, a custom regex and a custom output file:
-```bash
-python elastic-gdpr-analyzer.py -t mytargets.json -r '[vV]incent.[mM]aury' -o gdpr-report.json
-```
-
-
-### Running the script with NER
+### Running the script
 
 Setup a virtual environment and install the 2 dependencies:
 ```bash
@@ -148,26 +121,32 @@ pip install transformers torch
 
 The ML model (2GB big) will be installed at first execution:
 ```bash
-python elastic-gdpr-analyzer-with-ner.py
+python elastic-gdpr-analyzer.py -h
 ```
 
-The script has the same options as the previous one (without NER):
+The script has several options:
 * `-h` will display help.
 * `-t TARGET_FILE` to specify the json file to read cluster hosts from. Defaults to `targets.json`. See the `targets_example.json` file as example.
+* `-i INDEX` to enter the name of a specific index to scan. By default, the script scans all indices.
 * `-r REGEX` to enter a specific regex to look for (if set, cancels running all regexes from regexes.json file).
 * `-n NB_DOCS` to set the number of documents (up to 10000) to get from each Elasticsearch index. Defaults to `1`.
 * `-o REPORT_FILE` to specify the name of the file to output results. csv or json supported. Defaults to `es-gdpr-report.csv`.
+* `--no-ner` is a flag to disable NER scanning, ie only search for regexes. By default, the script runs NER!
 * `--nb-threads NB_THREADS` to specify how many hosts you want to scan in parallel. Defaults to `10`.
 * `--socket-timeout TIMEOUT` to set the timeout for socket connect (open port testing), in seconds. Set it to 2 on the Internet, 0.5 in local networks. Defaults to `2`.
-* `--verbose` turns on verbose output in console. Defaults to `False`.
+* `--verbose` is a flag to turn on verbose output in console.
 
 Easy run on 100 documents:
 ```bash
-python elastic-gdpr-analyzer-with-ner.py -n 100
+python elastic-gdpr-analyzer.py -n 100
 ```
-Or on a custom list of targets, a custom regex and a custom output file:
+Or analyze the 'test-rgpd' index (see below) with a custom regex:
 ```bash
-python elastic-gdpr-analyzer-with-ner.py -t mytargets.json -r '[vV]incent.[mM]aury' -o gdpr-report-with-ner.json
+python elastic-gdpr-analyzer.py -i 'test-rgpd' -r '[vV]incent.[mM]aury'
+```
+Or analyze a custom list of targets, a custom regex and a custom json output file:
+```bash
+python elastic-gdpr-analyzer.py -t mytargets.json -r '[vV]incent.[mM]aury' -o gdpr-report.json
 ```
 
 At the end of your tests, you may delete the virtual environment:
