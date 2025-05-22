@@ -131,6 +131,7 @@ The script has several options:
 * `-r REGEX` to enter a specific regex to look for (if set, cancels running all regexes from regexes.json file).
 * `-n NB_DOCS` to set the number of documents (up to 10000) to get from each Elasticsearch index. Defaults to `1`.
 * `-o REPORT_FILE` to specify the name of the file to output results. csv or json supported. Defaults to `es-gdpr-report.csv`.
+* `--no-hidden` is a flag to exclude hidden indices (which name starts with a dot). By default, the script scans for any index (hidden or not).
 * `--no-ner` is a flag to disable NER scanning, ie only search for regexes. By default, the script runs NER!
 * `--nb-threads NB_THREADS` to specify how many hosts you want to scan in parallel. Defaults to `10`.
 * `--socket-timeout TIMEOUT` to set the timeout for socket connect (open port testing), in seconds. Set it to 2 on the Internet, 0.5 in local networks. Defaults to `2`.

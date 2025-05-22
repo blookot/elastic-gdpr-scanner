@@ -32,6 +32,7 @@ import torch
 VERBOSE = False
 SCAN_FIRST_INDEX_ONLY = False
 SINGLE_INDEX_SCAN = ""      # name of the index to scan
+INCLUDE_DOT_INDICES = True  # Test the hidden (dot) indices
 RUN_NER_SCAN = True         # Do NER checking by default
 THREAD_TIMEOUT = 240                 # timeout per host, in seconds
 TCP_SOCKET_TIMEOUT = 2              # timeout for port scan, in seconds
@@ -114,8 +115,9 @@ def rgpdScan(target):
         # /_cat/indices introduced in 1.3, not working on v0.90 (thus relying on node stats...)
         if 'indices' in esAnswer:
             for index, indexDetails in iter(esAnswer['indices'].items()):
+                # print ("** getting index {}".format(index))
                 # consider non-internal indices
-                if index[:1] != '.':
+                if INCLUDE_DOT_INDICES or (not(INCLUDE_DOT_INDICES) and index[:1] != '.'):
                     # do we test it?
                     if SINGLE_INDEX_SCAN == '' or SINGLE_INDEX_SCAN == index:
                         if VERBOSE:
@@ -294,6 +296,7 @@ parser.add_argument('-i', action='store', default='', dest='index', help='Name o
 parser.add_argument('-r', action='store', default='', dest='regex', help='Specific regex to look for (if set, cancels running all regexes from regexes.json file)')
 parser.add_argument('-n', action='store', default='', dest='nbdocs', help='Number of documents (up to 10000) to get from each Elasticsearch index (default: 1)')
 parser.add_argument('-o', action='store', default='', dest='output', help='Name of the file to output results. csv or json supported (default: es-gdpr-report.csv)')
+parser.add_argument('--no-hidden', action='store_true', default=False, dest='nohidden', help='Exclude hidden indices starting with a dot (default: false, meaning search in indices starting with a dot)')
 parser.add_argument('--no-ner', action='store_true', default=False, dest='noner', help='Disable NER scanning, ie only search for regexes (default: false, meaning do the NER!)')
 parser.add_argument('--nb-threads', action='store', default='', dest='nbt', help='Number of hosts to scan in parallel (default: 10)')
 parser.add_argument('--socket-timeout', action='store', default='', dest='to', help='Seconds to wait for each host/port scanned. Set it to 2 on the Internet, 0.5 in local networks (default: 2)')
@@ -318,6 +321,7 @@ if results.output != '':
     LOG_FILE = results.output
     if LOG_FILE[-4:] == 'json':
         LOG_FILE_FORMAT = 'json'
+INCLUDE_DOT_INDICES = not(results.nohidden)
 RUN_NER_SCAN = not(results.noner)
 if results.nbt != '':
     NB_THREADS = results.nbt
